@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tomodachi</title>
+<style>
+  :root {
+    --ink: rgb(38, 31, 26);
+    --bored: rgb(242, 235, 217);
+    --happy: rgb(245, 219, 107);
+    --sad: rgb(125, 196, 232);
+    --angry: rgb(232, 112, 107);
+    --bg: var(--bored);
+    --fg: var(--ink);
+    --font: ui-rounded, "SF Pro Rounded", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font);
+    transition: background-color .6s ease, color .3s ease;
+    -webkit-font-smoothing: antialiased;
+  }
+  body.light-text { --fg: #fff; }
+  .screen {
+    min-height: 100%;
+    max-width: 430px;
+    margin: 0 auto;
+    padding: 16px 32px 48px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  .spacer { flex: 1; }
+  .spacer2 { flex: 2; }
+  .face {
+    width: 160px; height: 160px;
+    image-rendering: pixelated;
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,.25));
+    transition: transform .4s cubic-bezier(.34,1.56,.64,1);
+  }
+  .face.pop { transform: scale(1.08); }
+  .material {
+    background: rgba(255,255,255,.45);
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+  }
+  .light-text .material { background: rgba(0,0,0,.2); }
+  .banner {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 14px; border-radius: 999px;
+    font-size: 12px; font-weight: 500;
+  }
+  .banner span { opacity: .7; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: orange; transition: background .3s; }
+  .dot.on { background: #34c759; }
+  .label { font-size: 12px; font-weight: 700; letter-spacing: 4px; opacity: .45; text-transform: uppercase; }
+  .mood { font-size: 42px; font-weight: 900; margin: 6px 0; }
+  .tagline { font-size: 15px; opacity: .7; }
+  .task { width: 100%; padding: 20px 32px; border-radius: 16px; }
+  .task .label { letter-spacing: 2px; font-weight: 600; margin-bottom: 8px; }
+  .task-name { font-size: 20px; font-weight: 600; overflow-wrap: anywhere; }
+  .btn {
+    width: 100%; border: 0; cursor: pointer;
+    padding: 18px; border-radius: 16px;
+    font: 700 20px var(--font);
+    background: var(--fg); color: var(--bg);
+    transition: transform .1s, background-color .6s, color .6s;
+  }
+  .btn:active { transform: scale(.98); }
+  .link { margin-top: 12px; background: none; border: 0; cursor: pointer; font: 500 15px var(--font); color: var(--fg); opacity: .45; }
+  .link:hover { opacity: .7; }
+  h1 { font-size: 26px; font-weight: 900; }
+  .sub { font-size: 15px; opacity: .55; margin: 8px 8px 36px; }
+  input {
+    width: 100%; border: 0; outline: none;
+    padding: 16px 20px; border-radius: 14px; margin-bottom: 16px;
+    background: #fff; color: var(--ink);
+    font: 600 20px var(--font); text-align: center;
+  }
+  input:focus-visible { box-shadow: 0 0 0 2px var(--ink); }
+  .shake { animation: shake .3s linear; }
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    15% { transform: translateX(10px); } 30% { transform: translateX(-10px); }
+    45% { transform: translateX(8px); } 60% { transform: translateX(-8px); }
+    75% { transform: translateX(4px); } 90% { transform: translateX(-4px); }
+  }
+  .step-in { animation: stepIn .35s ease; }
+  @keyframes stepIn { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: none; } }
+  .reset { position: fixed; right: 10px; bottom: 8px; font-size: 11px; margin: 0; }
+  [hidden] { display: none !important; }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+
+<!-- Onboarding -->
+<main id="onboarding" class="screen">
+  <div class="spacer"></div>
+  <img id="ob-face" class="face" style="width:140px;height:140px;margin-bottom:28px" src="img/face_bored.png" alt="">
+  <form id="ob-form" class="step-in" style="width:100%">
+    <h1 id="ob-head">Your Tomodachi is here.</h1>
+    <p class="sub" id="ob-sub">Give it a name so it knows you care.</p>
+    <input id="ob-input" placeholder="Name your Tomodachi…" autocomplete="off" aria-label="Name your Tomodachi">
+    <button class="btn" id="ob-btn" type="submit">Next →</button>
+  </form>
+  <div class="spacer2"></div>
+</main>
+
+<!-- Main -->
+<main id="main" class="screen" hidden>
+  <div class="banner material" role="status">
+    <div class="dot" id="dot"></div><span id="conn">Disconnected</span>
+  </div>
+  <div class="spacer"></div>
+  <img id="face" class="face" src="img/face_bored.png" alt="">
+  <div style="margin-top:16px">
+    <div class="label" id="pet-name">TOMODACHI</div>
+    <div class="mood" id="mood" aria-live="polite">Bored</div>
+    <p class="tagline" id="tagline">Your Tomodachi is waiting on you…</p>
+  </div>
+  <div class="spacer"></div>
+  <section class="task material">
+    <div class="label">Today's task</div>
+    <div class="task-name" id="task-name">Water the plant</div>
+  </section>
+  <div class="spacer"></div>
+  <button class="btn" id="did">I did it ✓</button>
+  <button class="link" id="forgot">I forgot…</button>
+</main>
+
+<button class="link reset" id="reset">Reset demo</button>
+
+<script>
+const MOODS = {
+  happy: { tagline: "Your Tomodachi is thriving!", light: false },
+  bored: { tagline: "Your Tomodachi is waiting on you…", light: false },
+  sad:   { tagline: "Hey. You forgot.", light: true },
+  angry: { tagline: "Your Tomodachi is MAD.", light: true },
+};
+const $ = id => document.getElementById(id);
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch {} },
+  clear() { try { ["tomodachiName","tomodachiTask","onboardingComplete"].forEach(k => localStorage.removeItem(k)); } catch {} },
+};
+
+// Simulated Bluetooth link (the real app pairs with a TOMODACHI_GI device over BLE).
+let btTimers = [];
+function simulateBluetooth() {
+  btTimers.forEach(clearTimeout);
+  const set = (text, on) => { $("conn").textContent = text; $("dot").classList.toggle("on", on); };
+  set("Searching…", false);
+  btTimers = [
+    setTimeout(() => set("Connecting…", false), 1200),
+    setTimeout(() => set("Connected (demo)", true), 2200),
+  ];
+}
+
+function setMood(m) {
+  document.body.style.setProperty("--bg", `var(--${m})`);
+  document.body.classList.toggle("light-text", MOODS[m].light);
+  const face = $("face");
+  face.src = `img/face_${m}.png`;
+  face.classList.add("pop");
+  setTimeout(() => face.classList.remove("pop"), 200);
+  $("mood").textContent = m[0].toUpperCase() + m.slice(1);
+  $("tagline").textContent = MOODS[m].tagline;
+}
+
+function showMain() {
+  $("onboarding").hidden = true;
+  $("main").hidden = false;
+  $("pet-name").textContent = (store.get("tomodachiName") || "Tomodachi").toUpperCase();
+  $("task-name").textContent = store.get("tomodachiTask") || "Water the plant";
+  setMood("bored");
+  simulateBluetooth();
+}
+
+// Onboarding flow
+let step = "name";
+function shake() {
+  const el = $("ob-input");
+  el.classList.remove("shake"); void el.offsetWidth; el.classList.add("shake");
+}
+function showStep(s) {
+  step = s;
+  const f = $("ob-form");
+  f.classList.remove("step-in"); void f.offsetWidth; f.classList.add("step-in");
+  const name = s === "name";
+  $("ob-face").src = `img/face_${name ? "bored" : "happy"}.png`;
+  $("ob-head").textContent = name ? "Your Tomodachi is here." : "What's the habit?";
+  $("ob-sub").textContent = name ? "Give it a name so it knows you care." : "Your Tomodachi will hold you to it. Daily.";
+  $("ob-input").placeholder = name ? "Name your Tomodachi…" : "e.g. Water the plant";
+  $("ob-input").setAttribute("aria-label", $("ob-input").placeholder);
+  $("ob-input").value = "";
+  $("ob-btn").textContent = name ? "Next →" : "Let's go →";
+  $("ob-input").focus({ preventScroll: true });
+}
+$("ob-form").addEventListener("submit", e => {
+  e.preventDefault();
+  const v = $("ob-input").value.trim();
+  if (!v) return shake();
+  if (step === "name") { store.set("tomodachiName", v); showStep("task"); }
+  else { store.set("tomodachiTask", v); store.set("onboardingComplete", "1"); showMain(); }
+});
+
+$("did").onclick = () => setMood("happy");
+$("forgot").onclick = () => setMood("sad");
+$("reset").onclick = () => {
+  store.clear(); btTimers.forEach(clearTimeout);
+  document.body.style.setProperty("--bg", "var(--bored)");
+  document.body.classList.remove("light-text");
+  $("main").hidden = true; $("onboarding").hidden = false; showStep("name");
+};
+
+if (new URLSearchParams(location.search).has("reset")) store.clear();
+store.get("onboardingComplete") ? showMain() : showStep("name");
+</script>
+</body>
+</html>
